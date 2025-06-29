@@ -37,10 +37,10 @@ end
 
 function Preview:is_valid()
   return self.tree_node ~= nil
-    and self.preview_win ~= nil
-    and vim.api.nvim_win_is_valid(self.preview_win)
-    and self.preview_buf ~= nil
-    and vim.api.nvim_buf_is_valid(self.preview_buf)
+      and self.preview_win ~= nil
+      and vim.api.nvim_win_is_valid(self.preview_win)
+      and self.preview_buf ~= nil
+      and vim.api.nvim_buf_is_valid(self.preview_buf)
 end
 
 function Preview:is_focused()
@@ -339,9 +339,9 @@ function Preview:load_buf_content()
 
   if type == 'file' then
     local is_previewable_image = config.image_preview.enable
-      and vim.iter(config.image_preview.patterns):any(function(pattern)
-        return path:lower():find(pattern) ~= nil
-      end)
+        and vim.iter(config.image_preview.patterns):any(function(pattern)
+          return path:lower():find(pattern) ~= nil
+        end)
     if is_previewable_image then
       self:load_image()
     else
@@ -484,14 +484,28 @@ end
 ---Calculate the optimal position for the preview window
 ---@param tree_win number The tree window handle
 ---@param size {width: number, height: number} Desired window dimensions
----@return {row: number, col: number} Calculated position
+---@return {row: number, col: number, relative: 'editor' | 'win'} Calculated position
 function Preview:calculate_win_position(tree_win, size)
+  local tree_cfg = vim.api.nvim_win_get_config(tree_win)
+  local is_floating = tree_cfg.relative ~= ''
+  if is_floating then
+    -- Floating-tree: put preview right below it (centred column layout)
+    local row      = tree_cfg.row + tree_cfg.height + 2
+    local col      = tree_cfg.col
+    -- Clamp if we would run past the screen
+    local screen_h = vim.o.lines - vim.o.cmdheight
+    if row + size.height > screen_h then
+      row = math.max(0, screen_h - size.height)
+    end
+    return { row = row, col = col, relative = 'editor' }
+  end
+
   local view_side = require('nvim-tree').config.view.side
 
   -- Get cursor and window scroll information
   local cursor_row = vim.api.nvim_win_get_cursor(tree_win)[1] - 1 -- Convert from 1-based to 0-based
   local win_info = vim.fn.getwininfo(tree_win)[1]
-  local topline = win_info.topline - 1 -- Convert from 1-based to 0-based
+  local topline = win_info.topline - 1                            -- Convert from 1-based to 0-based
 
   -- Calculate cursor position relative to visible window
   local relative_cursor = cursor_row - topline
@@ -513,10 +527,7 @@ function Preview:calculate_win_position(tree_win, size)
   -- Calculate column position based on tree side
   local col = (view_side == 'left' and vim.fn.winwidth(tree_win) + 1 or -size.width - 3)
 
-  return {
-    row = row,
-    col = col,
-  }
+  return { row = row, col = col, relative = 'win' }
 end
 
 ---Get the desired size of the preview window
@@ -552,7 +563,14 @@ function Preview:get_win()
     return nil
   end
 
-  local size = self:calculate_win_size()
+  local tree_cfg = vim.api.nvim_win_get_config(tree.win)
+  local is_floating = tree_cfg.relative ~= ''
+
+  -- Copy tree’s dimensions when floating
+  local size = is_floating
+      and { width = tree_cfg.width, height = tree_cfg.height }
+      or self:calculate_win_size()
+
   local position = self:calculate_win_position(tree.win, size)
 
   local opts = {
@@ -560,22 +578,24 @@ function Preview:get_win()
     height = size.height,
     row = position.row,
     col = position.col,
-    relative = 'win',
-    win = tree.win,
+    relative = position.relative,
   }
 
   if self.preview_win and vim.api.nvim_win_is_valid(self.preview_win) then
+    -- vim.api.nvim_win_set_config(self.preview_win, vim.tbl_extend('force', position, size))
     vim.api.nvim_win_set_config(self.preview_win, opts)
     -- self:set_win_options(self.preview_win)
     return self.preview_win
   end
 
   opts = vim.tbl_extend('force', opts, {
-    noautocmd = true,
-    focusable = false,
-    border = config.border,
-    zindex = config.zindex,
-  })
+      noautocmd = true,
+      focusable = false,
+      border = config.border,
+      zindex = config.zindex,
+    },
+    is_floating and {} or { win = tree.win }
+  )
 
   local win = noautocmd(vim.api.nvim_open_win, self.preview_buf, false, opts)
   -- self:set_win_options(win)
