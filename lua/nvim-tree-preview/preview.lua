@@ -566,7 +566,7 @@ function Preview:get_win()
   local tree_cfg = vim.api.nvim_win_get_config(tree.win)
   local is_floating = tree_cfg.relative ~= ''
   -- Have to add one extra row if the total height is an odd number to fill out the entire popup size
-  local offset = Util.ui.get_popup_size().height % 2 == 0 and 0 or 1
+  local offset = Util.ui.get_popup_size('lg').height % 2 == 0 and 0 or 1
 
   -- Copy tree’s dimensions when floating
   local size = is_floating
