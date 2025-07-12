@@ -46,6 +46,7 @@
 ---@field title_format string
 ---@field follow_links boolean
 ---@field win_position WindowPosition
+---@field calculate_win_size? fun(tree_win?: number): {width: number, height: number}
 ---@field on_open? fun(win: number, buf: number)
 ---@field on_close? fun()
 ---@field image_preview {enable: boolean, patterns: string[]}
