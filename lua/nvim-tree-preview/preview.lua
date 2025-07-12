@@ -543,12 +543,24 @@ end
 ---Get the desired size of the preview window
 ---@return {width: number, height: number}
 function Preview:calculate_win_size()
-  local width = vim.api.nvim_get_option_value('columns', {})
-  local height = vim.api.nvim_get_option_value('lines', {})
-  return {
-    width = math.min(config.max_width, math.max(config.min_width, math.ceil(width / 2))),
-    height = math.min(config.max_height, math.max(config.min_height, math.ceil(height / 2))),
-  }
+  local function fallback_size()
+    local width = vim.api.nvim_get_option_value('columns', {})
+    local height = vim.api.nvim_get_option_value('lines', {})
+    return {
+      width = math.min(config.max_width, math.max(config.min_width, math.ceil(width / 2))),
+      height = math.min(config.max_height, math.max(config.min_height, math.ceil(height / 2))),
+    }
+  end
+
+  if config.calculate_win_size then
+    local tree = get_tree_context()
+    if not tree then
+      return fallback_size()
+    end
+    return config.calculate_win_size(tree.win)
+  end
+
+  return fallback_size()
 end
 
 ---Set all window-specific options

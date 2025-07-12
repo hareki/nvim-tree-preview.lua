@@ -23,6 +23,7 @@ local M = {
     title_format = ' %s ',
     follow_links = true,
     win_position = {},
+    calculate_win_size = nil,
     image_preview = {
       enable = false,
       patterns = {
