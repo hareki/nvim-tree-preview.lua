@@ -643,17 +643,13 @@ end
 ---@param node NvimTreeNode
 ---@return number buffer The buffer number
 function Preview:setup_preview_buffer(node)
-  local needs_new_buffer = not self.preview_buf or not vim.api.nvim_buf_is_valid(self.preview_buf)
+  self.preview_buf = vim.api.nvim_create_buf(false, true)
 
-  if needs_new_buffer then
-    self.preview_buf = vim.api.nvim_create_buf(false, true)
-    -- Set buffer options that only need to be set once
-    vim.bo[self.preview_buf].bufhidden = 'delete'
-    vim.bo[self.preview_buf].buftype = 'nofile'
-    vim.bo[self.preview_buf].swapfile = false
-    vim.bo[self.preview_buf].buflisted = false
-    vim.bo[self.preview_buf].modifiable = false
-  end
+  vim.bo[self.preview_buf].bufhidden = 'wipe'
+  vim.bo[self.preview_buf].buftype = 'nofile'
+  vim.bo[self.preview_buf].swapfile = false
+  vim.bo[self.preview_buf].buflisted = false
+  vim.bo[self.preview_buf].modifiable = false
 
   -- Always update buffer name to match current node
   vim.api.nvim_buf_set_name(self.preview_buf, 'nvim-tree-preview://' .. node.absolute_path)
