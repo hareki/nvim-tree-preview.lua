@@ -612,6 +612,7 @@ function Preview:get_win()
   local win = noautocmd(vim.api.nvim_open_win, self.preview_buf, false, opts)
   -- self:set_win_options(win)
   self.preview_win = win
+  vim.wo[win].cursorline = false
 
   if config.on_open then
     config.on_open(self.preview_win, self.preview_buf)
