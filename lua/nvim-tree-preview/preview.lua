@@ -686,6 +686,7 @@ function Preview:open(node)
     self:init_preview_window()
   elseif is_different_node then
     vim.schedule(function()
+      self:setup_keymaps()
       self:update_title()
       self:load_buf_content()
       self:set_win_options()
