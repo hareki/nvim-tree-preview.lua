@@ -251,6 +251,6 @@ preview.scroll(amount)
 
 ## License
 
-Copyright (C) 2024 Maddison Hellstrom
+Copyright (C) 2024 Maddison Cohodas
 
 MIT License
