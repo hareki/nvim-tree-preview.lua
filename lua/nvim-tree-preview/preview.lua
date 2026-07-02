@@ -388,7 +388,9 @@ function Preview:clear_buf()
   local buf = self.preview_buf --[[ @as number ]]
   vim.api.nvim_buf_clear_namespace(buf, -1, 0, -1)
   if self.image ~= nil then
-    self.image:clear()
+    pcall(function()
+      self.image:close()
+    end)
     self.image = nil
   end
   vim.bo[buf].modifiable = true
@@ -424,18 +426,30 @@ function Preview:load_image()
   self:clear_buf()
   local buf = self.preview_buf --[[ @as number ]]
   local win = self.preview_win --[[ @as number ]]
-  local ok, image_nvim = pcall(require, 'image')
-  if not ok then
-    vim.notify_once('nvim-tree-preview: image.nvim not found', vim.log.levels.ERROR)
+  if not (_G.Snacks and Snacks.image and Snacks.image.supports_terminal()) then
+    vim.notify_once('nvim-tree-preview: snacks.nvim image support not available', vim.log.levels.ERROR)
     return
   end
-  local image = image_nvim.from_file(self.tree_node.absolute_path, {
-    window = win,
-    buffer = buf,
-    max_width_window_percentage = 100,
-    max_height_window_percentage = 100,
+  local cleared = false
+  local ok, placement = pcall(Snacks.image.placement.new, buf, self.tree_node.absolute_path, {
+    inline = false,
+    pos = { 1, 0 }, -- (1,0)-indexed: flush with the window content's top-left corner
+    -- Overlay the first image row on buffer line 1 instead of pushing all rows
+    -- into virt_lines below it, which would leave a 1-cell padding at the top
+    conceal = true,
+    max_width = vim.api.nvim_win_get_width(win),
+    max_height = vim.api.nvim_win_get_height(win),
+    on_update_pre = function()
+      if cleared then
+        return
+      end
+      cleared = true
+      -- Wipe snacks's "<step> loading …" spinner extmark from placement:progress(),
+      -- which it never clears once the image is ready
+      vim.api.nvim_buf_clear_namespace(buf, -1, 0, -1)
+    end,
   })
-  if not image then
+  if not ok or not placement then
     local msg = 'Error reading image'
     self:set_buf_content {
       lines = { msg },
@@ -450,10 +464,7 @@ function Preview:load_image()
     }
     return
   end
-  vim.schedule(function()
-    image:render()
-  end)
-  self.image = image --[[ @as PreviewImage ]]
+  self.image = placement --[[ @as PreviewImage ]]
 end
 
 ---Update the title of the preview window

@@ -7,8 +7,7 @@
 ---@field name string
 ---@field type 'file' | 'directory' | 'link'
 
----@class PreviewImage
----@field clear fun()
+---@alias PreviewImage snacks.image.Placement
 
 ---@class Preview
 ---@field manager PreviewManager
