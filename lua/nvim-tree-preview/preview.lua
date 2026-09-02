@@ -632,6 +632,23 @@ function Preview:get_win()
   return win
 end
 
+---Re-apply the preview window's geometry, and re-render its content when that
+---content does not re-flow on its own. Called after the tree window or the
+---terminal was resized.
+function Preview:resize()
+  if not self:is_valid() then
+    return
+  end
+
+  self:get_win()
+
+  -- Image placements capture their max width/height when created, so they have
+  -- to be rebuilt to scale for the new window size. Text re-flows by itself.
+  if self.image ~= nil then
+    self:load_buf_content()
+  end
+end
+
 function Preview:unload_buf()
   if self.preview_buf and vim.api.nvim_buf_is_valid(self.preview_buf) then
     vim.api.nvim_buf_delete(self.preview_buf, { force = true })

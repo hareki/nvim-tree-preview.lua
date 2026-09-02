@@ -54,6 +54,14 @@ function M.close()
   end
 end
 
+---Recalculate the preview window's size and position, e.g. after the tree
+---window or the terminal was resized. No-op when no preview is open.
+function M.resize()
+  if M.instance then
+    M.instance:resize()
+  end
+end
+
 ---Returns true if the preview window is currently being watched.
 function M.is_watching()
   return M.watch_augroup ~= nil
