@@ -86,7 +86,7 @@ function Preview:setup_autocmds()
     group = self.augroup,
     callback = function()
       local buf = vim.api.nvim_get_current_buf()
-      if not (buf == tree.buf or buf == self.preview_buf) then
+      if not (buf == tree.buf or buf == self.preview_buf or util.is_float_over_tree()) then
         self:close { focus_tree = false }
       end
     end,

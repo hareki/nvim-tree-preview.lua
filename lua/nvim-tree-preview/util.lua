@@ -1,3 +1,5 @@
+local api = require 'nvim-tree.api'
+
 local M = {}
 
 ---Returns true if the given value is a function or a table with a __call metamethod.
@@ -39,6 +41,14 @@ M.is_binary = function(str)
 
   -- If more than 10% non-printable characters, consider it binary
   return (non_printable / check_length) > 0.1
+end
+
+---Returns true if focus is in a floating window (a picker, an input, a terminal) while the tree
+---is open. Entering one keeps the preview, as Snacks pickers keep theirs, so focus can return
+---to it (`wincmd p`) once that window closes.
+---@return boolean
+M.is_float_over_tree = function()
+  return vim.api.nvim_win_get_config(0).relative ~= '' and api.tree.is_visible()
 end
 
 return M
