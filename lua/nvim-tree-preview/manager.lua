@@ -2,6 +2,7 @@ local api = require 'nvim-tree.api'
 
 local Preview = require 'nvim-tree-preview.preview'
 local config = require 'nvim-tree-preview.config'
+local util = require 'nvim-tree-preview.util'
 
 ---@class PreviewManager
 local M = {
@@ -129,7 +130,7 @@ function M.watch()
         end
       elseif M.instance and buf == M.instance.preview_buf then
         return
-      else
+      elseif not util.is_float_over_tree() then
         M.unwatch()
       end
     end,
